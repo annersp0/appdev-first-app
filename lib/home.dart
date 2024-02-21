@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, 
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Color.fromARGB(255, 132, 9, 9),
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                     },
                     onEdit: () {
-                      _showAddContactBottomSheet(context, contact: contacts[index]);
+                      _showAddContactFloatingForm(context, contact: contacts[index]);
                     },
                   );
                 },
@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showAddContactBottomSheet(context);
+          _showAddContactFloatingForm(context);
         },
         child: Icon(Icons.add, color: Colors.white),
         backgroundColor: Color.fromARGB(255, 132, 9, 9),
@@ -106,100 +106,101 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showAddContactBottomSheet(BuildContext context, {Contact? contact}) {
+  void _showAddContactFloatingForm(BuildContext context, {Contact? contact}) {
     nameController.text = contact?.name ?? '';
     contactNumberController.text = contact?.contactNumber ?? '';
     addressController.text = contact?.address ?? '';
     selectedRelationship = contact?.relationship ?? 'Family';
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
       builder: (BuildContext context) {
-        return SingleChildScrollView( 
-          child: Container(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(labelText: 'Name'),
-                ),
-                TextField(
-                  controller: contactNumberController,
-                  decoration: InputDecoration(labelText: 'Contact Number'),
-                ),
-                TextField(
-                  controller: addressController,
-                  decoration: InputDecoration(labelText: 'Address'),
-                ),
-                SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  value: selectedRelationship,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedRelationship = newValue!;
-                    });
-                  },
-                  items: <String>['Family', 'Friend', 'Partner', 'Guardian']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
+        return AlertDialog(
+          title: Text(contact == null ? 'Add Contact' : 'Edit Contact'),
+          content: SingleChildScrollView(
+            child: Container(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(labelText: 'Name'),
+                  ),
+                  TextField(
+                    controller: contactNumberController,
+                    decoration: InputDecoration(labelText: 'Contact Number'),
+                  ),
+                  TextField(
+                    controller: addressController,
+                    decoration: InputDecoration(labelText: 'Address'),
+                  ),
+                  SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: selectedRelationship,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedRelationship = newValue!;
+                      });
+                    },
+                    items: <String>['Family', 'Friend', 'Partner', 'Guardian']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
 
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        if (nameController.text.isNotEmpty &&
-                            contactNumberController.text.isNotEmpty &&
-                            addressController.text.isNotEmpty) {
-                          setState(() {
-                            if (contact == null) {
-                              contacts.add(Contact(
-                                name: nameController.text,
-                                contactNumber: contactNumberController.text,
-                                address: addressController.text,
-                                relationship: selectedRelationship,
-                              ));
-                            } else {
-                              contact.name = nameController.text;
-                              contact.contactNumber = contactNumberController.text;
-                              contact.address = addressController.text;
-                              contact.relationship = selectedRelationship;
-                            }
-                          });
-                          nameController.clear();
-                          contactNumberController.clear();
-                          addressController.clear();
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          if (nameController.text.isNotEmpty &&
+                              contactNumberController.text.isNotEmpty &&
+                              addressController.text.isNotEmpty) {
+                            setState(() {
+                              if (contact == null) {
+                                contacts.add(Contact(
+                                  name: nameController.text,
+                                  contactNumber: contactNumberController.text,
+                                  address: addressController.text,
+                                  relationship: selectedRelationship,
+                                ));
+                              } else {
+                                contact.name = nameController.text;
+                                contact.contactNumber = contactNumberController.text;
+                                contact.address = addressController.text;
+                                contact.relationship = selectedRelationship;
+                              }
+                            });
+                            nameController.clear();
+                            contactNumberController.clear();
+                            addressController.clear();
+                            Navigator.pop(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please fill in all fields.'),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(contact == null ? 'Add' : 'Save'),
+                      ),
+                      SizedBox(width: 10),
+                      TextButton(
+                        onPressed: () {
                           Navigator.pop(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Please fill in all fields.'),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(contact == null ? 'Add' : 'Save'),
-                    ),
-                    SizedBox(width: 10),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text('Cancel'),
-                    ),
-                  ],
-                ),
-              ],
+                        },
+                        child: Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
